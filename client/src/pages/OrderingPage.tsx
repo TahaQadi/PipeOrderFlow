@@ -555,6 +555,10 @@ export default function OrderingPage() {
     const cartItem = cart.find(item => item.productId === product.id);
     const isDifferentLta = activeLtaId !== null && activeLtaId !== product.ltaId;
     const inPriceRequest = priceRequestList.some(item => item.productId === product.id);
+    
+    const productSlug = product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const categorySlug = (product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const productUrl = `/products/${categorySlug}/${productSlug}`;
 
     return (
       <Card
@@ -565,7 +569,7 @@ export default function OrderingPage() {
           "hover:border-primary dark:hover:border-[#d4af37] " +
           "hover:shadow-2xl dark:hover:shadow-[#d4af37]/20 " +
           "hover:scale-105 hover:-translate-y-2 " +
-          "animate-fade-in",
+          "animate-fade-in cursor-pointer",
           isDifferentLta && "opacity-50 pointer-events-none"
         )}
         data-testid={`card-product-${product.id}`}
@@ -573,29 +577,28 @@ export default function OrderingPage() {
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-amber-500/10 
           group-hover:from-orange-500/30 group-hover:to-amber-500/20
-          transition-all duration-500 opacity-0 group-hover:opacity-100" />
+          transition-all duration-500 opacity-0 group-hover:opacity-100 pointer-events-none" />
 
         {/* Shimmer Effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
 
         {/* Product Image */}
-        <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
-          <Link href={`/products/${(product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
-            <div className="w-full h-full cursor-pointer group-hover:scale-105 transition-transform duration-300">
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={primaryName}
-                  className="w-full h-full object-cover"
-                  data-testid={`img-product-${product.id}`}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Package className="w-16 h-16 text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors" />
-                </div>
-              )}
-            </div>
-          </Link>
+        <Link href={productUrl} className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
+          <div className="w-full h-full group-hover:scale-105 transition-transform duration-300">
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={primaryName}
+                className="w-full h-full object-cover"
+                data-testid={`img-product-${product.id}`}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Package className="w-16 h-16 text-muted-foreground/40 group-hover:text-muted-foreground/60 transition-colors" />
+              </div>
+            )}
+          </div>
+        </Link>
 
           {/* Badges */}
           <div className="absolute top-2 end-2 flex flex-col gap-2">
@@ -617,28 +620,20 @@ export default function OrderingPage() {
             )}
           </div>
 
-          {/* Quick Action Overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <Link href={`/products/${(product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
-              <Button variant="secondary" size="sm" className="backdrop-blur-md">
-                <Eye className="w-4 h-4 me-2" />
-                {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
-              </Button>
-            </Link>
-          </div>
-        </div>
+          </Link>
 
         {/* Product Info */}
         <CardContent className="flex-1 p-4 space-y-3 relative z-10">
-          <div>
-            <Link href={`/products/${(product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
+          <Link href={productUrl}>
+            <div>
               <h3 className="font-semibold text-base line-clamp-2 text-card-foreground hover:text-primary cursor-pointer transition-colors" data-testid={`text-product-name-${product.id}`}>
                 {primaryName}
               </h3>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                 {secondaryName}
               </p>
-            </Link>
+            </div>
+          </Link>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-xs text-muted-foreground font-mono">SKU: {product.sku}</p>
               {product.unitPerBox && (
@@ -689,10 +684,14 @@ export default function OrderingPage() {
         </CardContent>
 
         {/* Action Buttons */}
-        <CardFooter className="p-4 pt-0 gap-2">
+        <CardFooter className="p-4 pt-0 gap-2 relative z-20">
           {product.hasPrice ? (
             <Button
-              onClick={() => handleAddToCart(product)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAddToCart(product);
+              }}
               disabled={isDifferentLta}
               className="w-full transition-all duration-300 shadow-sm hover:shadow-md"
               size="lg"
@@ -710,7 +709,11 @@ export default function OrderingPage() {
             </Button>
           ) : (
             <Button
-              onClick={(e) => handleAddToPriceRequest(product, e)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAddToPriceRequest(product, e);
+              }}
               variant={inPriceRequest ? "secondary" : "outline"}
               className="w-full transition-all duration-300"
               size="lg"
