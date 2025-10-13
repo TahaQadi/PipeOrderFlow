@@ -180,6 +180,31 @@ export const documents = pgTable("documents", {
   generatedAt: timestamp("generated_at").defaultNow(),
 });
 
+// Price Offers table
+export const priceOffers = pgTable("price_offers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  offerNumber: text("offer_number").notNull().unique(),
+  clientId: varchar("client_id").notNull().references(() => clients.id, { onDelete: "restrict" }),
+  ltaId: uuid("lta_id").notNull().references(() => ltas.id, { onDelete: "restrict" }),
+  priceRequestNotificationId: varchar("price_request_notification_id").references(() => notifications.id, { onDelete: "set null" }),
+  status: text("status").notNull().default("draft"), // draft, sent, viewed, accepted, rejected, expired
+  language: text("language").notNull().default("en"),
+  items: jsonb("items").notNull(), // Array of {productId, sku, nameEn, nameAr, contractPrice, currency, quantity}
+  validFrom: timestamp("valid_from").notNull().defaultNow(),
+  validUntil: timestamp("valid_until").notNull(),
+  notes: text("notes"),
+  pdfFileName: text("pdf_file_name"),
+  sentAt: timestamp("sent_at"),
+  viewedAt: timestamp("viewed_at"),
+  respondedAt: timestamp("responded_at"),
+  responseNote: text("response_note"),
+  generatedBy: varchar("generated_by").references(() => clients.id, { onDelete: "set null" }), // Admin who generated it
+  version: integer("version").notNull().default(1),
+  parentOfferId: varchar("parent_offer_id"), // For tracking revisions
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 
 // Insert schemas
 // Note: insertClientSchema expects a raw password that will be hashed by the auth layer before storage
@@ -198,6 +223,7 @@ export const insertClientPricingSchema = createInsertSchema(clientPricing).omit(
 export const insertOrderTemplateSchema = createInsertSchema(orderTemplates).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true, metadata: true });
+export const insertPriceOfferSchema = createInsertSchema(priceOffers).omit({ id: true, createdAt: true, updatedAt: true });
 
 
 // Login schema
@@ -324,6 +350,7 @@ export type ClientPricing = typeof clientPricing.$inferSelect;
 export type OrderTemplate = typeof orderTemplates.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+export type PriceOffer = typeof priceOffers.$inferSelect;
 
 export type InsertClient = z.infer<typeof insertClientSchema>;
 export type InsertClientDepartment = z.infer<typeof insertClientDepartmentSchema>;
@@ -337,6 +364,7 @@ export type InsertClientPricing = z.infer<typeof insertClientPricingSchema>;
 export type InsertOrderTemplate = z.infer<typeof insertOrderTemplateSchema>;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type InsertPriceOffer = z.infer<typeof insertPriceOfferSchema>;
 
 export type LoginCredentials = z.infer<typeof loginSchema>;
 export type PriceImportRow = z.infer<typeof priceImportRowSchema>;
