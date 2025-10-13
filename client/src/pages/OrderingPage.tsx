@@ -556,7 +556,7 @@ export default function OrderingPage() {
     const isDifferentLta = activeLtaId !== null && activeLtaId !== product.ltaId;
     const inPriceRequest = priceRequestList.some(item => item.productId === product.id);
     const [, setLocation] = useLocation();
-    
+
     const productSlug = product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const categorySlug = (product.category?.trim() || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'products';
     const productUrl = `/products/${categorySlug}/${productSlug}`;
@@ -713,17 +713,21 @@ export default function OrderingPage() {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
                 handleAddToPriceRequest(product, e);
               }}
-              variant={inPriceRequest ? "secondary" : "outline"}
-              className="w-full transition-all duration-300"
+              variant={inPriceRequest 
+                ? 'secondary' 
+                : 'outline'
+              }
+              className="w-full transition-all duration-300 shadow-sm hover:shadow-md"
               size="lg"
               data-testid={`button-add-to-price-request-${product.id}`}
             >
               <Heart className={`w-4 h-4 me-2 ${inPriceRequest ? 'fill-current' : ''}`} />
               <span>
                 {inPriceRequest
-                  ? (language === 'ar' ? 'في قائمة الطلبات' : 'In Request List')
+                  ? (language === 'ar' ? 'في قائمة الأسعار' : 'In Price List')
                   : (language === 'ar' ? 'طلب عرض سعر' : 'Request Quote')
                 }
               </span>
