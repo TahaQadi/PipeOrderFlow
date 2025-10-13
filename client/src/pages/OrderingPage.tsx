@@ -869,7 +869,7 @@ export default function OrderingPage() {
           </div>
 
           <Tabs defaultValue="products" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6 sm:mb-8 h-11 sm:h-12" data-testid="tabs-list">
+            <TabsList className="grid w-full grid-cols-4 mb-6 sm:mb-8 h-11 sm:h-12" data-testid="tabs-list">
               <TabsTrigger value="products" className="text-sm sm:text-base" data-testid="tab-products">
                 <Package className="h-4 w-4 me-1 sm:me-2" />
                 <span className="hidden xs:inline">{language === 'ar' ? 'المنتجات' : 'Products'}</span>
@@ -879,6 +879,11 @@ export default function OrderingPage() {
                 <FileText className="h-4 w-4 me-1 sm:me-2" />
                 <span className="hidden xs:inline">{t('templates')}</span>
                 <span className="xs:hidden">{language === 'ar' ? 'قوالب' : 'Temp'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="price-requests" className="text-sm sm:text-base" data-testid="tab-price-requests">
+                <Heart className="h-4 w-4 me-1 sm:me-2" />
+                <span className="hidden xs:inline">{language === 'ar' ? 'طلبات الأسعار' : 'Price Requests'}</span>
+                <span className="xs:hidden">{language === 'ar' ? 'أسعار' : 'Prices'}</span>
               </TabsTrigger>
               <TabsTrigger value="history" className="text-sm sm:text-base" data-testid="tab-history">
                 <History className="h-4 w-4 me-1 sm:me-2" />
@@ -1127,6 +1132,173 @@ export default function OrderingPage() {
                   <p className="text-sm text-muted-foreground mt-2">{t('createTemplate')}</p>
                 </div>
               )}
+            </TabsContent>
+
+            {/* Price Requests Tab */}
+            <TabsContent value="price-requests" className="mt-0">
+              <div className="space-y-6">
+                {/* Search and Filter Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <h2 className="text-xl sm:text-2xl font-bold">
+                      {language === 'ar' ? 'المنتجات بدون أسعار' : 'Products Without Prices'}
+                    </h2>
+                    {priceRequestList.length > 0 && (
+                      <Badge variant="secondary" className="text-sm">
+                        {priceRequestList.length} {language === 'ar' ? 'منتج' : 'items'}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type="search"
+                      placeholder={language === 'ar' ? 'ابحث عن المنتجات بدون أسعار...' : 'Search products without prices...'}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-11 ps-10 border-2 focus-visible:ring-2"
+                    />
+                  </div>
+                </div>
+
+                {/* Products Without Prices Grid */}
+                {productsLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="p-4">
+                        <Skeleton className="h-5 w-3/4 mb-3" />
+                        <Skeleton className="h-4 w-1/2 mb-2" />
+                        <Skeleton className="h-10 w-full mt-4" />
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    {filteredProducts.filter(p => !p.hasPrice).length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {filteredProducts.filter(p => !p.hasPrice).map((product) => {
+                          const inPriceRequest = priceRequestList.some(item => item.productId === product.id);
+                          return (
+                            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                              <CardHeader className="p-4 bg-muted/30">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-base line-clamp-2">
+                                      {language === 'ar' ? product.nameAr : product.nameEn}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      SKU: {product.sku}
+                                    </p>
+                                  </div>
+                                  <Badge variant="outline" className="flex-shrink-0">
+                                    {language === 'ar' ? 'بدون سعر' : 'No Price'}
+                                  </Badge>
+                                </div>
+                              </CardHeader>
+                              <CardContent className="p-4">
+                                {product.descriptionEn && (
+                                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                                    {language === 'ar' ? product.descriptionAr : product.descriptionEn}
+                                  </p>
+                                )}
+                                {product.category && (
+                                  <Badge variant="secondary" className="text-xs mb-3">
+                                    {product.category}
+                                  </Badge>
+                                )}
+                              </CardContent>
+                              <CardFooter className="p-4 pt-0">
+                                <Button
+                                  onClick={() => handleAddToPriceRequest(product)}
+                                  disabled={inPriceRequest}
+                                  className="w-full"
+                                  variant={inPriceRequest ? "secondary" : "default"}
+                                >
+                                  <Heart className={`h-4 w-4 me-2 ${inPriceRequest ? 'fill-current' : ''}`} />
+                                  {inPriceRequest
+                                    ? (language === 'ar' ? 'في قائمة الطلبات' : 'In Request List')
+                                    : (language === 'ar' ? 'إضافة إلى طلبات الأسعار' : 'Add to Price Request')
+                                  }
+                                </Button>
+                              </CardFooter>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <Card className="p-12 text-center border-2 border-dashed">
+                        <div className="max-w-md mx-auto space-y-4">
+                          <div className="w-20 h-20 mx-auto bg-muted rounded-full flex items-center justify-center">
+                            <Heart className="w-10 h-10 text-muted-foreground/50" />
+                          </div>
+                          <h3 className="text-xl font-semibold text-foreground">
+                            {language === 'ar' ? 'لا توجد منتجات بدون أسعار' : 'No Products Without Prices'}
+                          </h3>
+                          <p className="text-muted-foreground">
+                            {language === 'ar'
+                              ? 'جميع المنتجات لها أسعار محددة'
+                              : 'All products have assigned prices'}
+                          </p>
+                        </div>
+                      </Card>
+                    )}
+                  </>
+                )}
+
+                {/* Request List Summary */}
+                {priceRequestList.length > 0 && (
+                  <Card className="bg-primary/5 border-primary/20">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <Heart className="h-5 w-5" />
+                          {language === 'ar' ? 'قائمة طلبات الأسعار' : 'Price Request List'}
+                        </h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPriceRequestList([])}
+                        >
+                          <Trash2 className="h-4 w-4 me-2" />
+                          {language === 'ar' ? 'مسح الكل' : 'Clear All'}
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {priceRequestList.map((item) => (
+                        <div key={item.productId} className="flex items-center justify-between gap-2 p-3 rounded-lg bg-background border">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {language === 'ar' ? item.productNameAr : item.productNameEn}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              SKU: {item.productSku}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveFromPriceRequest(item.productId)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </CardContent>
+                    <CardFooter>
+                      <Button 
+                        onClick={() => setPriceRequestDialogOpen(true)} 
+                        className="w-full"
+                        size="lg"
+                      >
+                        <Send className="h-4 w-4 me-2" />
+                        {language === 'ar' ? 'إرسال طلب الأسعار' : 'Send Price Request'}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )}
+              </div>
             </TabsContent>
 
             {/* History Tab */}
