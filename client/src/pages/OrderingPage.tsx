@@ -558,7 +558,7 @@ export default function OrderingPage() {
     const [, setLocation] = useLocation();
     
     const productSlug = product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-    const categorySlug = (product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const categorySlug = (product.category?.trim() || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'products';
     const productUrl = `/products/${categorySlug}/${productSlug}`;
 
     const handleCardClick = () => {
