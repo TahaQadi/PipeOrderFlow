@@ -389,12 +389,7 @@ export default function OrderingPage() {
     deleteTemplateMutation.mutate(id);
   };
 
-  const handleAddToPriceRequest = (product: ProductWithLtaPrice, event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-
+  const handleAddToPriceRequest = (product: ProductWithLtaPrice) => {
     const exists = priceRequestList.find(item => item.productId === product.id);
 
     if (exists) {
@@ -713,8 +708,7 @@ export default function OrderingPage() {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                e.nativeEvent.stopImmediatePropagation();
-                handleAddToPriceRequest(product, e);
+                handleAddToPriceRequest(product);
               }}
               variant={inPriceRequest 
                 ? 'secondary' 
