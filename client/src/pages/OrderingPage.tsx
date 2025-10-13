@@ -25,7 +25,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Heart, Package, Trash2, Send, X, ShoppingCart, User, LogOut, FileText, Save, Eye, Loader2, DollarSign, AlertCircle, Clock, Settings, Search, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import type { Product, Lta } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { SEO } from "@/components/SEO";
@@ -555,13 +555,19 @@ export default function OrderingPage() {
     const cartItem = cart.find(item => item.productId === product.id);
     const isDifferentLta = activeLtaId !== null && activeLtaId !== product.ltaId;
     const inPriceRequest = priceRequestList.some(item => item.productId === product.id);
+    const [, setLocation] = useLocation();
     
     const productSlug = product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const categorySlug = (product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const productUrl = `/products/${categorySlug}/${productSlug}`;
 
+    const handleCardClick = () => {
+      setLocation(productUrl);
+    };
+
     return (
       <Card
+        onClick={handleCardClick}
         className={cn(
           "group flex flex-col overflow-hidden transition-all duration-500 ease-out " +
           "bg-card/50 dark:bg-[#222222]/50 backdrop-blur-sm " +
@@ -583,7 +589,7 @@ export default function OrderingPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
 
         {/* Product Image */}
-        <Link href={productUrl} className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
+        <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
           <div className="w-full h-full group-hover:scale-105 transition-transform duration-300">
             {product.imageUrl ? (
               <img
@@ -598,7 +604,7 @@ export default function OrderingPage() {
               </div>
             )}
           </div>
-        </Link>
+        </div>
 
           {/* Badges */}
           <div className="absolute top-2 end-2 flex flex-col gap-2">
@@ -622,16 +628,14 @@ export default function OrderingPage() {
 
         {/* Product Info */}
         <CardContent className="flex-1 p-4 space-y-3 relative z-10">
-          <Link href={productUrl}>
-            <div>
-              <h3 className="font-semibold text-base line-clamp-2 text-card-foreground hover:text-primary cursor-pointer transition-colors" data-testid={`text-product-name-${product.id}`}>
-                {primaryName}
-              </h3>
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                {secondaryName}
-              </p>
-            </div>
-          </Link>
+          <div>
+            <h3 className="font-semibold text-base line-clamp-2 text-card-foreground hover:text-primary transition-colors" data-testid={`text-product-name-${product.id}`}>
+              {primaryName}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              {secondaryName}
+            </p>
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <p className="text-xs text-muted-foreground font-mono">SKU: {product.sku}</p>
             {product.unitPerBox && (
