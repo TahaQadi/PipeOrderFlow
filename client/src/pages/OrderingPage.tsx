@@ -567,30 +567,26 @@ export default function OrderingPage() {
 
     return (
       <Card
-        onClick={handleCardClick}
         className={cn(
           "group flex flex-col overflow-hidden transition-all duration-500 ease-out " +
           "bg-card/50 dark:bg-[#222222]/50 backdrop-blur-sm " +
           "border-border/50 dark:border-[#d4af37]/20 " +
           "hover:border-primary dark:hover:border-[#d4af37] " +
           "hover:shadow-2xl dark:hover:shadow-[#d4af37]/20 " +
-          "hover:scale-105 hover:-translate-y-2 " +
-          "animate-fade-in cursor-pointer",
+          "animate-fade-in",
           isDifferentLta && "opacity-50 pointer-events-none"
         )}
         data-testid={`card-product-${product.id}`}
       >
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-amber-500/10 
-          group-hover:from-orange-500/30 group-hover:to-amber-500/20
-          transition-all duration-500 opacity-0 group-hover:opacity-100 pointer-events-none" />
-
         {/* Shimmer Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
 
         {/* Product Image */}
-        <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
-          <div className="w-full h-full group-hover:scale-105 transition-transform duration-300">
+        <div 
+          className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={handleCardClick}
+        >
+          <div className="w-full h-full">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
@@ -629,7 +625,11 @@ export default function OrderingPage() {
         {/* Product Info */}
         <CardContent className="flex-1 p-4 space-y-3 relative z-10">
           <div>
-            <h3 className="font-semibold text-base line-clamp-2 text-card-foreground hover:text-primary transition-colors" data-testid={`text-product-name-${product.id}`}>
+            <h3 
+              className="font-semibold text-base line-clamp-2 text-card-foreground hover:text-primary transition-colors cursor-pointer" 
+              data-testid={`text-product-name-${product.id}`}
+              onClick={handleCardClick}
+            >
               {primaryName}
             </h3>
             <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
@@ -735,12 +735,7 @@ export default function OrderingPage() {
           )}
         </CardFooter>
 
-        {/* Bottom accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 
-          bg-gradient-to-r from-transparent via-primary to-transparent
-          transition-all duration-500
-          opacity-0 group-hover:opacity-100 scale-x-0 group-hover:scale-x-100" />
-      </Card>
+        </Card>
     );
   }
 
