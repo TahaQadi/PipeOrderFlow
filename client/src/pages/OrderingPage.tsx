@@ -620,8 +620,6 @@ export default function OrderingPage() {
             )}
           </div>
 
-          </Link>
-
         {/* Product Info */}
         <CardContent className="flex-1 p-4 space-y-3 relative z-10">
           <Link href={productUrl}>
@@ -634,14 +632,13 @@ export default function OrderingPage() {
               </p>
             </div>
           </Link>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-xs text-muted-foreground font-mono">SKU: {product.sku}</p>
-              {product.unitPerBox && (
-                <Badge variant="outline" className="text-xs">
-                  📦 {product.unitPerBox} {language === 'ar' ? 'قطع/صندوق' : 'pcs/box'}
-                </Badge>
-              )}
-            </div>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-xs text-muted-foreground font-mono">SKU: {product.sku}</p>
+            {product.unitPerBox && (
+              <Badge variant="outline" className="text-xs">
+                📦 {product.unitPerBox} {language === 'ar' ? 'قطع/صندوق' : 'pcs/box'}
+              </Badge>
+            )}
           </div>
 
           {description && (
