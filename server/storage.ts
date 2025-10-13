@@ -10,6 +10,7 @@ import {
   type Lta,
   type LtaProduct,
   type LtaClient,
+  type PriceOffer,
   type InsertClient,
   type InsertClientDepartment,
   type InsertClientLocation,
@@ -21,6 +22,7 @@ import {
   type InsertLta,
   type InsertLtaProduct,
   type InsertLtaClient,
+  type InsertPriceOffer,
   type AuthUser,
   type User,
   type UpsertUser,
@@ -38,6 +40,7 @@ import {
   ltaProducts,
   ltaClients,
   users,
+  priceOffers,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import session from "express-session";
@@ -157,6 +160,14 @@ export interface IStorage {
   // New methods
   getAllProductsWithClientPrices(clientId: string): Promise<Array<Product & { contractPrice?: string; currency?: string; ltaId?: string; hasPrice: boolean }>>;
   getAdminClients(): Promise<Client[]>;
+
+  // Price Offers
+  createPriceOffer(data: InsertPriceOffer): Promise<PriceOffer>;
+  getPriceOffer(id: string): Promise<PriceOffer | null>;
+  getPriceOffersByClient(clientId: string): Promise<PriceOffer[]>;
+  getAllPriceOffers(): Promise<PriceOffer[]>;
+  updatePriceOfferStatus(id: string, status: string, additionalData?: Partial<PriceOffer>): Promise<PriceOffer | null>;
+  updatePriceOffer(id: string, data: Partial<PriceOffer>): Promise<PriceOffer | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -914,6 +925,71 @@ export class MemStorage implements IStorage {
       .execute();
 
     return result.length;
+  }
+
+  // Price Offers
+  async createPriceOffer(data: InsertPriceOffer): Promise<PriceOffer> {
+    const result = await this.db
+      .insert(priceOffers)
+      .values(data)
+      .returning()
+      .execute();
+    return result[0];
+  }
+
+  async getPriceOffer(id: string): Promise<PriceOffer | null> {
+    const result = await this.db
+      .select()
+      .from(priceOffers)
+      .where(eq(priceOffers.id, id))
+      .execute();
+    return result[0] || null;
+  }
+
+  async getPriceOffersByClient(clientId: string): Promise<PriceOffer[]> {
+    const result = await this.db
+      .select()
+      .from(priceOffers)
+      .where(eq(priceOffers.clientId, clientId))
+      .orderBy(desc(priceOffers.createdAt))
+      .execute();
+    return result;
+  }
+
+  async getAllPriceOffers(): Promise<PriceOffer[]> {
+    const result = await this.db
+      .select()
+      .from(priceOffers)
+      .orderBy(desc(priceOffers.createdAt))
+      .execute();
+    return result;
+  }
+
+  async updatePriceOfferStatus(id: string, status: string, additionalData?: Partial<PriceOffer>): Promise<PriceOffer | null> {
+    await this.db
+      .update(priceOffers)
+      .set({ 
+        status, 
+        updatedAt: new Date(),
+        ...additionalData 
+      })
+      .where(eq(priceOffers.id, id))
+      .execute();
+
+    return this.getPriceOffer(id);
+  }
+
+  async updatePriceOffer(id: string, data: Partial<PriceOffer>): Promise<PriceOffer | null> {
+    await this.db
+      .update(priceOffers)
+      .set({ 
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(priceOffers.id, id))
+      .execute();
+
+    return this.getPriceOffer(id);
   }
 }
 
