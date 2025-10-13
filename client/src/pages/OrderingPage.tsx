@@ -88,10 +88,7 @@ export default function OrderingPage() {
   const [priceRequestList, setPriceRequestList] = useState<CartItem[]>([]);
   const [priceRequestDialogOpen, setPriceRequestDialogOpen] = useState(false);
   const [priceRequestMessage, setPriceRequestMessage] = useState('');
-  const [quantityDialogOpen, setQuantityDialogOpen] = useState(false);
-  const [selectedProductForCart, setSelectedProductForCart] = useState<ProductWithLtaPrice | null>(null);
-  const [quantityPieces, setQuantityPieces] = useState(1);
-  const [quantityBoxes, setQuantityBoxes] = useState(0);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -246,61 +243,35 @@ export default function OrderingPage() {
       return;
     }
 
-    // Show quantity dialog
-    setSelectedProductForCart(product);
-    setQuantityPieces(1);
-    setQuantityBoxes(0);
-    setQuantityDialogOpen(true);
-  };
+    // Directly add to cart with quantity 1
+    const existingItemIndex = cart.findIndex(item => item.productId === product.id);
 
-  const handleConfirmAddToCart = () => {
-    if (!selectedProductForCart) return;
-
-    const totalPieces = quantityPieces + (quantityBoxes * (parseInt(selectedProductForCart.unitPerBox || '0') || 0));
-    
-    if (totalPieces <= 0) {
-      toast({
-        variant: 'destructive',
-        title: language === 'ar' ? 'الكمية مطلوبة' : 'Quantity Required',
-        description: language === 'ar' ? 'يرجى إدخال كمية صحيحة' : 'Please enter a valid quantity',
-      });
-      return;
-    }
-
-    const existingItem = cart.find(item => item.productId === selectedProductForCart.id);
-
-    if (existingItem) {
-      setCart(cart.map(item =>
-        item.productId === selectedProductForCart.id
-          ? { ...item, quantity: item.quantity + totalPieces }
-          : item
-      ));
+    if (existingItemIndex > -1) {
+      const newCart = [...cart];
+      newCart[existingItemIndex].quantity += 1;
+      setCart(newCart);
     } else {
       setCart([...cart, {
-        productId: selectedProductForCart.id,
-        productSku: selectedProductForCart.sku,
-        productNameEn: selectedProductForCart.nameEn,
-        productNameAr: selectedProductForCart.nameAr,
-        quantity: totalPieces,
-        price: selectedProductForCart.contractPrice,
-        currency: selectedProductForCart.currency,
-        ltaId: selectedProductForCart.ltaId,
+        productId: product.id,
+        productSku: product.sku,
+        productNameEn: product.nameEn,
+        productNameAr: product.nameAr,
+        quantity: 1, // Default quantity is 1
+        price: product.contractPrice,
+        currency: product.currency,
+        ltaId: product.ltaId,
       }]);
-
       // Set active LTA if cart was empty
       if (!activeLtaId) {
-        setActiveLtaId(selectedProductForCart.ltaId);
+        setActiveLtaId(product.ltaId);
       }
     }
 
     toast({
       description: language === 'ar'
-        ? `تمت إضافة ${totalPieces} من ${selectedProductForCart.nameAr} إلى السلة`
-        : `${totalPieces} ${selectedProductForCart.nameEn} added to cart`
+        ? `تمت إضافة 1 من ${product.nameAr} إلى السلة`
+        : `1 ${product.nameEn} added to cart`
     });
-
-    setQuantityDialogOpen(false);
-    setSelectedProductForCart(null);
   };
 
   const handleUpdateQuantity = (productId: string, quantity: number) => {
@@ -625,7 +596,7 @@ export default function OrderingPage() {
               )}
             </div>
           </Link>
-          
+
           {/* Badges */}
           <div className="absolute top-2 end-2 flex flex-col gap-2">
             {cartItem && (
@@ -758,7 +729,7 @@ export default function OrderingPage() {
 
         {/* Bottom accent line */}
         <div className="absolute bottom-0 left-0 right-0 h-1 
-          bg-gradient-to-r from-transparent via-primary dark:via-[#d4af37] to-transparent
+          bg-gradient-to-r from-transparent via-primary to-transparent
           transition-all duration-500
           opacity-0 group-hover:opacity-100 scale-x-0 group-hover:scale-x-100" />
       </Card>
@@ -1210,83 +1181,6 @@ export default function OrderingPage() {
           onOpenChange={setOrderDetailsDialogOpen}
           order={selectedOrder}
         />
-
-        {/* Quantity Selection Dialog */}
-        <Dialog open={quantityDialogOpen} onOpenChange={setQuantityDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {language === 'ar' ? 'اختر الكمية' : 'Select Quantity'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              {selectedProductForCart && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    {selectedProductForCart.imageUrl && (
-                      <img 
-                        src={selectedProductForCart.imageUrl} 
-                        alt={language === 'ar' ? selectedProductForCart.nameAr : selectedProductForCart.nameEn}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <h4 className="font-medium">{language === 'ar' ? selectedProductForCart.nameAr : selectedProductForCart.nameEn}</h4>
-                      <p className="text-sm text-muted-foreground">SKU: {selectedProductForCart.sku}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="pieces">{language === 'ar' ? 'الكمية (قطع)' : 'Quantity (Pieces)'}</Label>
-                    <Input
-                      id="pieces"
-                      type="number"
-                      min="0"
-                      value={quantityPieces}
-                      onChange={(e) => setQuantityPieces(Math.max(0, parseInt(e.target.value) || 0))}
-                      data-testid="input-quantity-pieces"
-                    />
-                  </div>
-
-                  {selectedProductForCart.unitPerBox && (
-                    <div className="space-y-2">
-                      <Label htmlFor="boxes">
-                        {language === 'ar' ? `الكمية (صناديق - ${selectedProductForCart.unitPerBox} قطع/صندوق)` : `Quantity (Boxes - ${selectedProductForCart.unitPerBox} pcs/box)`}
-                      </Label>
-                      <Input
-                        id="boxes"
-                        type="number"
-                        min="0"
-                        value={quantityBoxes}
-                        onChange={(e) => setQuantityBoxes(Math.max(0, parseInt(e.target.value) || 0))}
-                        data-testid="input-quantity-boxes"
-                      />
-                    </div>
-                  )}
-
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm font-medium">
-                      {language === 'ar' ? 'الإجمالي: ' : 'Total: '}
-                      <span className="text-primary">
-                        {quantityPieces + (quantityBoxes * (parseInt(selectedProductForCart.unitPerBox || '0') || 0))}
-                      </span>
-                      {language === 'ar' ? ' قطعة' : ' pieces'}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setQuantityDialogOpen(false)}>
-                {language === 'ar' ? 'إلغاء' : 'Cancel'}
-              </Button>
-              <Button onClick={handleConfirmAddToCart} data-testid="button-confirm-add-to-cart">
-                <ShoppingCart className="w-4 h-4 me-2" />
-                {language === 'ar' ? 'أضف إلى السلة' : 'Add to Cart'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Price Request Dialog */}
         <Dialog open={priceRequestDialogOpen} onOpenChange={setPriceRequestDialogOpen}>
