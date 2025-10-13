@@ -1,4 +1,3 @@
-
 import { renderToString } from 'react-dom/server';
 
 import type { Express, Request, Response, NextFunction } from "express";
@@ -919,7 +918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { productName } = req.params;
       const allProducts = await storage.getProducts();
-      
+
       // Find product by matching slugified name
       const product = allProducts.find(p => {
         const slugifiedName = p.nameEn.toLowerCase()
@@ -1911,53 +1910,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate PDF price offer for a price request
-  app.post('/api/admin/price-requests/:notificationId/generate-pdf', requireAdmin, async (req: any, res) => {
-    try {
-      const { PDFGenerator } = await import('./pdf-generator');
-      const { PDFStorage } = await import('./object-storage');
-
-
-  // Download PDF from Object Storage
-  app.get('/api/pdf/download/:fileName(*)', requireAuth, async (req: any, res) => {
-    try {
-      const { PDFStorage } = await import('./object-storage');
-      const fileName = req.params.fileName;
-
-      if (!fileName) {
-        return res.status(400).json({
-          message: "File name is required",
-          messageAr: "اسم الملف مطلوب"
-        });
-      }
-
-      const downloadResult = await PDFStorage.downloadPDF(fileName);
-
-      if (!downloadResult.ok || !downloadResult.data) {
-        return res.status(404).json({
-          message: "PDF not found",
-          messageAr: "لم يتم العثور على PDF",
-          error: downloadResult.error
-        });
-      }
-
-      // Extract just the filename for the download
-      const displayFileName = fileName.split('/').pop() || 'document.pdf';
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="${displayFileName}"`);
-      res.send(downloadResult.data);
-    } catch (error) {
-      console.error('PDF download error:', error);
-      res.status(500).json({
-        message: error instanceof Error ? error.message : 'Unknown error' || "Failed to download PDF",
-        messageAr: "فشل تنزيل PDF"
-      });
+  app.post('/api/admin/price-requests/:notificationId/generate-pdf', async (req: any, res) => {
+    if (!req.isAuthenticated() || !req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
     }
-  });
 
-      const { language = 'en', ltaId, validityDays = 30, notes } = req.body;
+    try {
+      const { notificationId } = req.params;
+      const { language, ltaId, validityDays, notes } = req.body;
 
-      // Get the notification
       const notification = await storage.getNotification(req.params.notificationId);
       if (!notification || notification.type !== 'price_request') {
         return res.status(404).json({
@@ -2086,6 +2047,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Download PDF from Object Storage
+  app.get('/api/pdf/download/:fileName(*)', requireAuth, async (req: any, res) => {
+    try {
+      const { PDFStorage } = await import('./object-storage');
+      const fileName = req.params.fileName;
+
+      if (!fileName) {
+        return res.status(400).json({
+          message: "File name is required",
+          messageAr: "اسم الملف مطلوب"
+        });
+      }
+
+      const downloadResult = await PDFStorage.downloadPDF(fileName);
+
+      if (!downloadResult.ok || !downloadResult.data) {
+        return res.status(404).json({
+          message: "PDF not found",
+          messageAr: "لم يتم العثور على PDF",
+          error: downloadResult.error
+        });
+      }
+
+      // Extract just the filename for the download
+      const displayFileName = fileName.split('/').pop() || 'document.pdf';
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${displayFileName}"`);
+      res.send(downloadResult.data);
+    } catch (error) {
+      console.error('PDF download error:', error);
+      res.status(500).json({
+        message: error instanceof Error ? error.message : 'Unknown error' || "Failed to download PDF",
+        messageAr: "فشل تنزيل PDF"
+      });
+    }
+  });
+
 
   // Client LTA Endpoints
   app.get('/api/client/ltas', requireAuth, async (req: any, res) => {
@@ -2467,7 +2467,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .replace(/^-+|-+$/g, '');
         return slugifiedName === req.params.productName;
       });
-      
+
       if (!product) {
         return res.status(404).json({ error: 'Product not found' });
       }
@@ -2476,7 +2476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const slugifiedSubCategory = (product.subCategory || 'products').toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
-      
+
       res.json({
         title: `${product.nameEn} - Al Qadi Portal`,
         description: product.descriptionEn || product.nameEn,
