@@ -114,9 +114,6 @@ export const ltaProducts = pgTable("lta_products", {
   productId: varchar("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
   contractPrice: decimal("contract_price", { precision: 10, scale: 2 }).notNull(),
   currency: text("currency").notNull().default("USD"),
-  alternateClientNameEn: text("alternate_client_name_en"),
-  alternateClientNameAr: text("alternate_client_name_ar"),
-  clientProductCode: text("client_product_code"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   uniqueLtaProduct: unique().on(table.ltaId, table.productId),
@@ -162,14 +159,15 @@ export const orders = pgTable("orders", {
 
 // Notifications table
 export const notifications = pgTable("notifications", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  clientId: uuid("client_id").references(() => clients.id, { onDelete: "cascade" }),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientId: varchar("client_id").references(() => clients.id, { onDelete: "cascade" }),
   type: text("type").notNull(),
-  title: text("title").notNull(),
-  message: text("message").notNull(),
-  link: text("link"),
-  pdfFileName: text("pdf_file_name"),
-  read: boolean("read").default(false),
+  titleEn: text("title_en").notNull(),
+  titleAr: text("title_ar").notNull(),
+  messageEn: text("message_en").notNull(),
+  messageAr: text("message_ar").notNull(),
+  isRead: boolean("is_read").default(false),
+  metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -194,16 +192,12 @@ export const insertLtaSchema = createInsertSchema(ltas).omit({ id: true, created
   startDate: z.union([z.date(), z.string().transform(str => new Date(str))]),
   endDate: z.union([z.date(), z.string().transform(str => new Date(str))]),
 });
-export const insertLtaProductSchema = createInsertSchema(ltaProducts).omit({ id: true, createdAt: true }).extend({
-  alternateClientNameEn: z.string().optional(),
-  alternateClientNameAr: z.string().optional(),
-  clientProductCode: z.string().optional(),
-});
+export const insertLtaProductSchema = createInsertSchema(ltaProducts).omit({ id: true, createdAt: true });
 export const insertLtaClientSchema = createInsertSchema(ltaClients).omit({ id: true, createdAt: true });
 export const insertClientPricingSchema = createInsertSchema(clientPricing).omit({ id: true, importedAt: true });
 export const insertOrderTemplateSchema = createInsertSchema(orderTemplates).omit({ id: true, createdAt: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
-export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, read: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true, metadata: true });
 
 
 // Login schema

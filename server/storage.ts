@@ -146,7 +146,6 @@ export interface IStorage {
     messageEn: string;
     messageAr: string;
     metadata?: string;
-    pdfFileName?: string;
   }): Promise<Notification>;
   getNotification(id: string): Promise<Notification | null>;
   getClientNotifications(clientId: string): Promise<Notification[]>;
@@ -441,28 +440,7 @@ export class MemStorage implements IStorage {
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
     const inserted = await this.db
       .insert(products)
-      .values({
-        nameEn: insertProduct.nameEn,
-        nameAr: insertProduct.nameAr,
-        sku: insertProduct.sku,
-        categoryNum: insertProduct.categoryNum ?? null,
-        unitType: insertProduct.unitType ?? null,
-        unit: insertProduct.unit ?? null,
-        unitPerBox: insertProduct.unitPerBox ?? null,
-        costPricePerBox: insertProduct.costPricePerBox ?? null,
-        costPricePerPiece: insertProduct.costPricePerPiece ?? null,
-        specificationsAr: insertProduct.specificationsAr ?? null,
-        vendorId: insertProduct.vendorId ?? null,
-        vendor: insertProduct.vendor ?? null,
-        vendorNum: insertProduct.vendorNum ?? null,
-        mainCategory: insertProduct.mainCategory ?? null,
-        category: insertProduct.category ?? null,
-        sellingPricePack: insertProduct.sellingPricePack ?? null,
-        sellingPricePiece: insertProduct.sellingPricePiece ?? null,
-        descriptionEn: insertProduct.descriptionEn ?? null,
-        descriptionAr: insertProduct.descriptionAr ?? null,
-        imageUrl: insertProduct.imageUrl ?? null,
-      })
+      .values(insertProduct)
       .returning();
     return inserted[0];
   }
@@ -861,7 +839,6 @@ export class MemStorage implements IStorage {
     messageEn: string;
     messageAr: string;
     metadata?: string;
-    pdfFileName?: string;
   }): Promise<Notification> {
     const result = await this.db.insert(notifications).values({
       clientId: data.clientId,
@@ -870,8 +847,7 @@ export class MemStorage implements IStorage {
       titleAr: data.titleAr,
       messageEn: data.messageEn,
       messageAr: data.messageAr,
-      metadata: data.metadata || null,
-      pdfFileName: data.pdfFileName || null,
+      metadata: data.metadata ? JSON.stringify(data.metadata) : null,
     }).returning();
 
     return result[0];
