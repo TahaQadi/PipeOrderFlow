@@ -550,11 +550,23 @@ export default function OrderingPage() {
     const cartItem = cart.find(item => item.productId === product.id);
     const isDifferentLta = activeLtaId !== null && activeLtaId !== product.ltaId;
     const inPriceRequest = priceRequestList.some(item => item.productId === product.id);
-    const [, setLocation] = useLocation();
 
     const productSlug = product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const categorySlug = (product.category?.trim() || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'products';
     const productUrl = `/products/${categorySlug}/${productSlug}`;
+
+    // Separate handlers to prevent event conflicts
+    const handleAddToCartClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAddToCart(product);
+    };
+
+    const handleAddToPriceRequestClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleAddToPriceRequest(product);
+    };
 
     return (
       <Card
@@ -573,7 +585,7 @@ export default function OrderingPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
 
         {/* Product Image */}
-        <Link href={productUrl}>
+        <Link href={productUrl} className="block">
           <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
             <div className="w-full h-full">
               {product.imageUrl ? (
@@ -615,7 +627,7 @@ export default function OrderingPage() {
         {/* Product Info */}
         <CardContent className="flex-1 p-4 space-y-3 relative z-10">
           <div>
-            <Link href={productUrl}>
+            <Link href={productUrl} className="block">
               <h3 
                 className="font-semibold text-base line-clamp-2 text-card-foreground hover:text-primary transition-colors cursor-pointer" 
                 data-testid={`text-product-name-${product.id}`}
@@ -680,7 +692,7 @@ export default function OrderingPage() {
           {product.hasPrice ? (
             <Button
               type="button"
-              onClick={() => handleAddToCart(product)}
+              onClick={handleAddToCartClick}
               disabled={isDifferentLta}
               className="w-full transition-all duration-300 shadow-sm hover:shadow-md"
               size="lg"
@@ -699,7 +711,7 @@ export default function OrderingPage() {
           ) : (
             <Button
               type="button"
-              onClick={() => handleAddToPriceRequest(product)}
+              onClick={handleAddToPriceRequestClick}
               variant={inPriceRequest 
                 ? 'secondary' 
                 : 'outline'
@@ -1387,7 +1399,12 @@ export default function OrderingPage() {
                               </CardContent>
                               <CardFooter className="p-4 pt-0">
                                 <Button
-                                  onClick={() => handleAddToPriceRequest(product)}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleAddToPriceRequest(product);
+                                  }}
                                   disabled={inPriceRequest}
                                   className="w-full"
                                   variant={inPriceRequest ? "secondary" : "default"}
