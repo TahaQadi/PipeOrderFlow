@@ -17,6 +17,7 @@ import AdminClientsPage from "@/pages/AdminClientsPage";
 import AdminLtaListPage from "@/pages/AdminLtaListPage";
 import AdminLtaDetailPage from "@/pages/AdminLtaDetailPage";
 import AdminPriceRequestsPage from '@/pages/AdminPriceRequestsPage';
+import AdminOffersPage from '@/pages/AdminOffersPage';
 import PriceRequestPage from '@/pages/PriceRequestPage';
 import ProductDetailPage from '@/pages/ProductDetailPage';
 import CatalogPage from '@/pages/CatalogPage';
@@ -94,6 +95,7 @@ function Router() {
       )}
       <AdminRoute path="/admin" component={AdminPage} />
       <AdminRoute path="/admin/products" component={AdminProductsPage} />
+      <AdminRoute path="/admin/offers" component={AdminOffersPage} />
       <AdminRoute path="/admin/vendors" component={AdminVendorsPage} />
       <AdminRoute path="/admin/clients" component={AdminClientsPage} />
       <AdminRoute path="/admin/price-requests" component={AdminPriceRequestsPage} />

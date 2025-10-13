@@ -3,9 +3,9 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, User, Users, Package, FileText, Truck, ChevronRight, ShoppingCart } from 'lucide-react';
+import { LogOut, User, Users, Package, FileText, Truck, ChevronRight, ShoppingCart, Heart } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useState } from 'react';
 
@@ -239,6 +239,71 @@ export default function AdminPage() {
               </Card>
             );
           })}
+          
+          {/* Generated Offers Card */}
+          <Card
+            className={`
+              relative overflow-hidden cursor-pointer group
+              bg-card/50 dark:bg-[#222222]/50 backdrop-blur-sm 
+              border-border/50 dark:border-[#d4af37]/20 
+              hover:border-primary dark:hover:border-[#d4af37] 
+              hover:shadow-2xl dark:hover:shadow-[#d4af37]/20 
+              transition-all duration-500 ease-out
+              ${hoveredCard === 'generated-offers' ? 'scale-105 -translate-y-2' : 'scale-100'}
+              animate-fade-in
+            `}
+            style={{ animationDelay: `${dashboardCards.length * 100}ms` }}
+            onClick={() => setLocation('/admin/offers')}
+            onMouseEnter={() => setHoveredCard('generated-offers')}
+            onMouseLeave={() => setHoveredCard(null)}
+            data-testid="card-generated-offers"
+          >
+            <div className={`
+              absolute inset-0 bg-gradient-to-br from-red-500/20 to-orange-500/10
+              transition-all duration-500 opacity-0 group-hover:opacity-100
+            `} />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+            
+            <CardHeader className="p-4 sm:p-6 relative z-10">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className={`
+                    p-3 rounded-xl 
+                    bg-gradient-to-br from-red-500/20 to-orange-500/10
+                    group-hover:scale-110 group-hover:rotate-6
+                    transition-all duration-500 flex-shrink-0
+                    border border-white/10
+                  `}>
+                    <FileText className={`
+                      h-6 w-6 text-primary dark:text-[#d4af37]
+                      group-hover:text-primary dark:group-hover:text-[#f9c800]
+                      transition-colors duration-300
+                    `} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base sm:text-lg text-foreground dark:text-white mb-1">
+                      {language === 'ar' ? 'عروض الأسعار المُنشأة' : 'Generated Offers'}
+                    </CardTitle>
+                    <p className="text-xs sm:text-sm text-muted-foreground dark:text-gray-400 line-clamp-2">
+                      {language === 'ar' ? 'عرض وتحميل جميع عروض الأسعار المُنشأة' : 'View and download all generated price offers'}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className={`
+                  h-5 w-5 text-muted-foreground flex-shrink-0
+                  transition-all duration-300
+                  ${hoveredCard === 'generated-offers' ? 'translate-x-1 text-primary dark:text-[#d4af37]' : ''}
+                `} />
+              </div>
+            </CardHeader>
+            <div className={`
+              absolute bottom-0 left-0 right-0 h-1 
+              bg-gradient-to-r from-transparent via-primary dark:via-[#d4af37] to-transparent
+              transition-all duration-500
+              ${hoveredCard === 'generated-offers' ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'}
+            `} />
+          </Card>
+
         </div>
 
         {/* Quick Stats Section (Optional) */}
