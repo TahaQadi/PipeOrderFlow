@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Heart, Package, Trash2, Send, X, ShoppingCart, User, LogOut, FileText, Save, Eye, Loader2, DollarSign, AlertCircle, Clock, Settings, Search, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -255,7 +256,7 @@ export default function OrderingPage() {
   const handleConfirmAddToCart = () => {
     if (!selectedProductForCart) return;
 
-    const totalPieces = quantityPieces + (quantityBoxes * (parseInt(selectedProductForCart.boxFillingQty || '0') || 0));
+    const totalPieces = quantityPieces + (quantityBoxes * (parseInt(selectedProductForCart.unitPerBox || '0') || 0));
     
     if (totalPieces <= 0) {
       toast({
@@ -587,13 +588,13 @@ export default function OrderingPage() {
     return (
       <Card
         className={cn(
-          "group flex flex-col overflow-hidden transition-all duration-500 ease-out
-          bg-card/50 dark:bg-[#222222]/50 backdrop-blur-sm 
-          border-border/50 dark:border-[#d4af37]/20 
-          hover:border-primary dark:hover:border-[#d4af37] 
-          hover:shadow-2xl dark:hover:shadow-[#d4af37]/20 
-          hover:scale-105 hover:-translate-y-2
-          animate-fade-in",
+          "group flex flex-col overflow-hidden transition-all duration-500 ease-out " +
+          "bg-card/50 dark:bg-[#222222]/50 backdrop-blur-sm " +
+          "border-border/50 dark:border-[#d4af37]/20 " +
+          "hover:border-primary dark:hover:border-[#d4af37] " +
+          "hover:shadow-2xl dark:hover:shadow-[#d4af37]/20 " +
+          "hover:scale-105 hover:-translate-y-2 " +
+          "animate-fade-in",
           isDifferentLta && "opacity-50 pointer-events-none"
         )}
         data-testid={`card-product-${product.id}`}
@@ -608,7 +609,7 @@ export default function OrderingPage() {
 
         {/* Product Image */}
         <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 overflow-hidden">
-          <Link href={`/products/${(product.subCategory || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
+          <Link href={`/products/${(product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
             <div className="w-full h-full cursor-pointer group-hover:scale-105 transition-transform duration-300">
               {product.imageUrl ? (
                 <img
@@ -647,7 +648,7 @@ export default function OrderingPage() {
 
           {/* Quick Action Overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <Link href={`/products/${(product.subCategory || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
+            <Link href={`/products/${(product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
               <Button variant="secondary" size="sm" className="backdrop-blur-md">
                 <Eye className="w-4 h-4 me-2" />
                 {language === 'ar' ? 'عرض التفاصيل' : 'View Details'}
@@ -659,7 +660,7 @@ export default function OrderingPage() {
         {/* Product Info */}
         <CardContent className="flex-1 p-4 space-y-3 relative z-10">
           <div>
-            <Link href={`/products/${(product.subCategory || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
+            <Link href={`/products/${(product.category || 'products').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}/${product.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')}`}>
               <h3 className="font-semibold text-base line-clamp-2 text-card-foreground hover:text-primary cursor-pointer transition-colors" data-testid={`text-product-name-${product.id}`}>
                 {primaryName}
               </h3>
@@ -669,9 +670,9 @@ export default function OrderingPage() {
             </Link>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-xs text-muted-foreground font-mono">SKU: {product.sku}</p>
-              {product.boxFillingQty && (
+              {product.unitPerBox && (
                 <Badge variant="outline" className="text-xs">
-                  📦 {product.boxFillingQty} {language === 'ar' ? 'قطع/صندوق' : 'pcs/box'}
+                  📦 {product.unitPerBox} {language === 'ar' ? 'قطع/صندوق' : 'pcs/box'}
                 </Badge>
               )}
             </div>
@@ -1247,10 +1248,10 @@ export default function OrderingPage() {
                     />
                   </div>
 
-                  {selectedProductForCart.boxFillingQty && (
+                  {selectedProductForCart.unitPerBox && (
                     <div className="space-y-2">
                       <Label htmlFor="boxes">
-                        {language === 'ar' ? `الكمية (صناديق - ${selectedProductForCart.boxFillingQty} قطع/صندوق)` : `Quantity (Boxes - ${selectedProductForCart.boxFillingQty} pcs/box)`}
+                        {language === 'ar' ? `الكمية (صناديق - ${selectedProductForCart.unitPerBox} قطع/صندوق)` : `Quantity (Boxes - ${selectedProductForCart.unitPerBox} pcs/box)`}
                       </Label>
                       <Input
                         id="boxes"
@@ -1267,7 +1268,7 @@ export default function OrderingPage() {
                     <p className="text-sm font-medium">
                       {language === 'ar' ? 'الإجمالي: ' : 'Total: '}
                       <span className="text-primary">
-                        {quantityPieces + (quantityBoxes * (parseInt(selectedProductForCart.boxFillingQty || '0') || 0))}
+                        {quantityPieces + (quantityBoxes * (parseInt(selectedProductForCart.unitPerBox || '0') || 0))}
                       </span>
                       {language === 'ar' ? ' قطعة' : ' pieces'}
                     </p>
