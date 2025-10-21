@@ -4,6 +4,15 @@ This bilingual (Arabic/English) application is designed for businesses to manage
 
 # Recent Changes
 
+**Mobile-First Navigation and Components (October 21, 2025):**
+- Implemented comprehensive mobile navigation system with drawer and bottom navigation bar
+- Added mobile-optimized product cards with touch feedback
+- Created full-screen mobile shopping cart with gesture support
+- Developed mobile utility library with touch target optimization (44px minimum)
+- Full RTL/LTR support for Arabic and English
+- WCAG 2.1 Level AAA accessibility compliance for touch targets
+- See `MOBILE_FEATURES.md` for complete documentation
+
 **Database Schema Fix (October 13, 2025):**
 - Fixed TypeScript error in shared/schema.ts (notifications table: changed `isRead` to `read`)
 - Resolved "products not showing in catalog" issue by adding missing `image_urls` column (jsonb type) to products table
@@ -23,6 +32,7 @@ Preferred communication style: Simple, everyday language.
 **UI Framework:** Shadcn/ui (Radix UI primitives) in "new-york" style, Tailwind CSS with custom design tokens, custom theme (light/dark), i18next for bilingual support.
 **Design System:** Material Design 3 adaptations, custom HSL color palette, Inter/Noto Sans Arabic/JetBrains Mono fonts, RTL/LTR layout, 4px base spacing, responsive grid (1 to 5 columns).
 **State Management:** React Context for authentication, theme, and language; React Query for server state caching; single-LTA context enforcement in cart.
+**Mobile Features:** Mobile-first navigation components (drawer, bottom bar), touch-optimized product cards, full-screen shopping cart, mobile utility library with accessibility-compliant touch targets (44px minimum). See `MOBILE_FEATURES.md`.
 
 ## Backend Architecture
 
@@ -53,7 +63,7 @@ Preferred communication style: Simple, everyday language.
 ## Key Features
 
 **Admin Features:** LTA management (CRUD, document upload/download), product assignment to LTAs (individual/bulk CSV), client assignment, product management (CRUD, image upload, custom metadata), client management, user management (admin toggles).
-**Client Features:** Responsive product grid from assigned LTA(s), product display (images, names, SKU, descriptions, pricing), single-LTA cart, active contract badge, order templates, order history with reorder, multi-language (EN/AR) with RTL.
+**Client Features:** Responsive product grid from assigned LTA(s), product display (images, names, SKU, descriptions, pricing), single-LTA cart, active contract badge, order templates, order history with reorder, multi-language (EN/AR) with RTL, mobile-optimized navigation and shopping experience with native app-like interactions.
 **System Features:** Full bilingual support, responsive design, dark/light themes, Pipefy webhook integration.
 
 # External Dependencies
