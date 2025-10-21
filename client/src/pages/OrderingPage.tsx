@@ -340,10 +340,21 @@ export default function OrderingPage() {
   };
 
   const handleSaveTemplate = (nameEn: string, nameAr: string) => {
+    if (cart.length === 0) {
+      toast({
+        title: language === 'ar' ? 'خطأ' : 'Error',
+        description: language === 'ar' ? 'لا يمكن حفظ قالب فارغ' : 'Cannot save empty template',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const items = cart.map(item => ({
       productId: item.productId,
       quantity: item.quantity,
     }));
+
+    console.log('Saving template with items:', items);
 
     saveTemplateMutation.mutate({
       nameEn,
@@ -354,37 +365,68 @@ export default function OrderingPage() {
   };
 
   const handleLoadTemplate = (templateData: { id: string; nameEn: string; nameAr: string; items: string; createdAt: Date }) => {
-    const templateItems = safeJsonParse(templateData.items, []);
-    const newCartItems: CartItem[] = [];
+    try {
+      const templateItems = safeJsonParse(templateData.items, []);
+      
+      if (!Array.isArray(templateItems)) {
+        throw new Error('Invalid template data structure');
+      }
 
-    for (const item of templateItems) {
-      if (item && typeof item === 'object' && 'productId' in item && 'quantity' in item) {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          newCartItems.push({
-            productId: product.id,
-            productNameEn: product.nameEn,
-            productNameAr: product.nameAr,
-            price: product.contractPrice,
-            quantity: item.quantity,
-            productSku: product.sku,
-            currency: product.currency,
-            ltaId: product.ltaId,
-          });
+      const newCartItems: CartItem[] = [];
+      let validItemsCount = 0;
+      let invalidItemsCount = 0;
+
+      for (const item of templateItems) {
+        if (item && typeof item === 'object' && 'productId' in item && 'quantity' in item) {
+          const product = products.find(p => p.id === item.productId);
+          if (product) {
+            newCartItems.push({
+              productId: product.id,
+              productNameEn: product.nameEn,
+              productNameAr: product.nameAr,
+              price: product.contractPrice || '0',
+              quantity: item.quantity,
+              productSku: product.sku,
+              currency: product.currency || 'SAR',
+              ltaId: product.ltaId || '',
+            });
+            validItemsCount++;
+          } else {
+            invalidItemsCount++;
+          }
+        } else {
+          invalidItemsCount++;
         }
       }
-    }
 
-    if (newCartItems.length > 0) {
-      setCart(newCartItems);
-      toast({
-        title: t('templateLoaded'),
-        description: language === 'ar' ? templateData.nameAr : templateData.nameEn,
-      });
-    } else {
+      if (newCartItems.length > 0) {
+        setCart(newCartItems);
+        toast({
+          title: t('templateLoaded'),
+          description: language === 'ar' ? templateData.nameAr : templateData.nameEn,
+        });
+        
+        if (invalidItemsCount > 0) {
+          toast({
+            title: language === 'ar' ? 'تحذير' : 'Warning',
+            description: language === 'ar' 
+              ? `تم تحميل ${validItemsCount} منتج، ${invalidItemsCount} منتج غير متوفر`
+              : `Loaded ${validItemsCount} items, ${invalidItemsCount} items unavailable`,
+            variant: 'destructive',
+          });
+        }
+      } else {
+        toast({
+          title: language === 'ar' ? 'خطأ في تحميل القالب' : 'Error loading template',
+          description: language === 'ar' ? 'لم يتم العثور على منتجات صالحة في القالب' : 'No valid products found in template',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Template loading error:', error);
       toast({
         title: language === 'ar' ? 'خطأ في تحميل القالب' : 'Error loading template',
-        description: language === 'ar' ? 'لم يتم العثور على منتجات صالحة في القالب' : 'No valid products found in template',
+        description: language === 'ar' ? 'حدث خطأ أثناء تحميل القالب' : 'An error occurred while loading the template',
         variant: 'destructive',
       });
     }

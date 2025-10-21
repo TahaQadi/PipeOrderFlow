@@ -35,6 +35,9 @@ import crypto from "crypto";
 import fs from "fs";
 import { emailService } from "./email";
 import { generateSitemap } from "./sitemap";
+import { PDFGenerator } from "./pdf-generator";
+import { PDFStorage } from "./object-storage";
+import { ErrorLogger } from "./error-logger";
 
 const uploadMemory = multer({ storage: multer.memoryStorage() });
 
@@ -1169,21 +1172,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/client/templates", requireAuth, async (req: any, res) => {
     try {
       const validatedData = saveTemplateSchema.parse(req.body);
+      
+      // Validate that all product IDs exist
+      const productIds = validatedData.items.map(item => item.productId);
+      const existingProducts = await Promise.all(
+        productIds.map(id => storage.getProduct(id))
+      );
+      
+      const missingProducts = productIds.filter((id, index) => !existingProducts[index]);
+      if (missingProducts.length > 0) {
+        return res.status(400).json({
+          message: `Products not found: ${missingProducts.join(', ')}`,
+          messageAr: `المنتجات غير موجودة: ${missingProducts.join(', ')}`,
+        });
+      }
+
       const template = await storage.createOrderTemplate({
         clientId: req.client.id,
         nameEn: validatedData.nameEn,
         nameAr: validatedData.nameAr,
         items: JSON.stringify(validatedData.items),
       });
+      
       res.status(201).json(template);
     } catch (error) {
+      console.error('Template creation error:', error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: error.errors[0]?.message || "Validation error",
           messageAr: error.errors[0]?.message || "خطأ في التحقق",
+          errors: error.errors,
         });
       }
-      res.status(500).json({ message: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : 'Unknown error',
+        messageAr: 'خطأ غير معروف'
+      });
     }
   });
 
@@ -1993,20 +2017,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + validityDays);
 
-      const pdfBuffer = await PDFGenerator.generatePriceOffer({
-        offerId: offerNumber,
-        offerDate: offerDate.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US'),
-        clientNameEn: client.nameEn,
-        clientNameAr: client.nameAr,
-        clientEmail: client.email || undefined,
-        clientPhone: client.phone || undefined,
-        ltaNameEn: lta.nameEn,
-        ltaNameAr: lta.nameAr,
-        items,
-        validUntil: validUntil.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US'),
-        notes: notes || undefined,
-        language: language as 'en' | 'ar'
-      });
+      let pdfBuffer: Buffer;
+      try {
+        pdfBuffer = await PDFGenerator.generatePriceOffer({
+          offerId: offerNumber,
+          offerDate: offerDate.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US'),
+          clientNameEn: client.nameEn,
+          clientNameAr: client.nameAr,
+          clientEmail: client.email || undefined,
+          clientPhone: client.phone || undefined,
+          ltaNameEn: lta.nameEn,
+          ltaNameAr: lta.nameAr,
+          items,
+          validUntil: validUntil.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US'),
+          notes: notes || undefined,
+          language: language as 'en' | 'ar'
+        });
+      } catch (pdfError) {
+        ErrorLogger.logError('PDF Generation', pdfError, {
+          offerId: offerNumber,
+          clientId: metadata.clientId,
+          ltaId,
+          itemsCount: items.length
+        });
+        return res.status(500).json({
+          message: "Failed to generate PDF",
+          messageAr: "فشل إنشاء ملف PDF",
+          error: pdfError instanceof Error ? pdfError.message : 'Unknown PDF generation error'
+        });
+      }
 
       // Save PDF to Object Storage
       const fileName = `${offerNumber}_${client.nameEn.replace(/\s/g, '_')}.pdf`;
