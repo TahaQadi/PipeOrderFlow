@@ -19,6 +19,8 @@ export class PDFStorage {
   ): Promise<{ ok: boolean; fileName?: string; error?: string }> {
     try {
       const fullPath = `${this.PDF_FOLDER}${fileName}`;
+      console.log('Uploading PDF to Object Storage:', fullPath);
+      console.log('PDF buffer size:', pdfBuffer.length, 'bytes');
       
       const { ok, error } = await client.uploadFromBytes(fullPath, pdfBuffer);
       
@@ -27,6 +29,7 @@ export class PDFStorage {
         return { ok: false, error: error?.message || 'Upload failed' };
       }
 
+      console.log('PDF uploaded successfully:', fullPath);
       return { ok: true, fileName: fullPath };
     } catch (error: any) {
       console.error('Error uploading PDF:', error);

@@ -298,12 +298,12 @@ export const updateProductSchema = createProductSchema.partial();
 
 // Template save schema
 export const saveTemplateSchema = z.object({
-  nameEn: z.string().min(1),
-  nameAr: z.string().min(1),
+  nameEn: z.string().min(1, 'English name is required'),
+  nameAr: z.string().min(1, 'Arabic name is required'),
   items: z.array(z.object({
-    productId: z.string(),
-    quantity: z.number().int().positive(),
-  })),
+    productId: z.string().min(1, 'Product ID is required'),
+    quantity: z.number().int().positive('Quantity must be a positive integer'),
+  })).min(1, 'At least one item is required'),
 });
 
 // Client update schema (admin)

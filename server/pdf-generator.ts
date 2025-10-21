@@ -45,6 +45,9 @@ export class PDFGenerator {
   static async generatePriceOffer(data: PriceOfferData): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       try {
+        console.log('Starting PDF generation for offer:', data.offerId);
+        console.log('Items count:', data.items.length);
+        
         const doc = new PDFDocument({
           size: 'A4',
           margins: { top: 120, bottom: 80, left: 50, right: 50 }

@@ -6,9 +6,17 @@
  */
 export function safeJsonParse<T>(jsonString: string, fallback: T): T {
   try {
-    return JSON.parse(jsonString);
+    if (!jsonString || typeof jsonString !== 'string') {
+      console.warn('Invalid JSON string provided:', jsonString);
+      return fallback;
+    }
+    
+    const parsed = JSON.parse(jsonString);
+    console.log('Successfully parsed JSON:', parsed);
+    return parsed;
   } catch (error) {
     console.warn('Failed to parse JSON:', error);
+    console.warn('JSON string was:', jsonString);
     return fallback;
   }
 }
