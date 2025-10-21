@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/components/LanguageProvider';
 import { ShoppingCart as ShoppingCartComponent } from '@/components/ShoppingCart';
+import { MobileShoppingCart } from '@/components/MobileShoppingCart';
 import { SaveTemplateDialog } from '@/components/SaveTemplateDialog';
 import { OrderTemplateCard } from '@/components/OrderTemplateCard';
 import { OrderHistoryTable } from '@/components/OrderHistoryTable';
@@ -11,6 +12,9 @@ import { OrderDetailsDialog } from '@/components/OrderDetailsDialog';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { MobileNavigation } from '@/components/MobileNavigation';
+import { BottomNavigation } from '@/components/BottomNavigation';
+import { MobileProductCard } from '@/components/MobileProductCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -88,6 +92,7 @@ export default function OrderingPage() {
   const [priceRequestList, setPriceRequestList] = useState<CartItem[]>([]);
   const [priceRequestDialogOpen, setPriceRequestDialogOpen] = useState(false);
   const [priceRequestMessage, setPriceRequestMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('lta-products');
 
 
   useEffect(() => {
@@ -758,6 +763,14 @@ export default function OrderingPage() {
         <header className="sticky top-0 z-50 border-b border-border/50 dark:border-[#d4af37]/20 bg-background/95 dark:bg-black/80 backdrop-blur-xl shadow-sm">
           <div className="container mx-auto px-3 sm:px-4 lg:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {/* Mobile Navigation */}
+              <MobileNavigation
+                cartItemCount={cartItemCount}
+                notificationCount={0} // TODO: Get from notifications
+                onPriceRequestClick={() => setPriceRequestDialogOpen(true)}
+                onTabChange={setActiveTab}
+              />
+              
               <img
                 src="/logo.png"
                 alt={language === 'ar' ? 'شعار الشركة' : 'Company Logo'}
@@ -850,7 +863,7 @@ export default function OrderingPage() {
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 relative z-10">
+        <main className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 pb-20 md:pb-8 relative z-10">
           {/* Welcome Section */}
           <div className="mb-8 animate-slide-down">
             <h2 className="text-2xl sm:text-3xl font-bold mb-2">
@@ -863,7 +876,7 @@ export default function OrderingPage() {
             </p>
           </div>
 
-          <Tabs defaultValue="lta-products" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5 mb-6 sm:mb-8 h-11 sm:h-12" data-testid="tabs-list">
               <TabsTrigger value="lta-products" className="text-sm sm:text-base" data-testid="tab-lta-products">
                 <Package className="h-4 w-4 me-1 sm:me-2" />
@@ -1060,7 +1073,58 @@ export default function OrderingPage() {
                   {/* Product Grid */}
                   <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 lg:gap-5">
                     {filteredProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
+                      <MobileProductCard
+                        key={product.id}
+                        id={product.id}
+                        nameEn={product.nameEn}
+                        nameAr={product.nameAr}
+                        descriptionEn={product.descriptionEn}
+                        descriptionAr={product.descriptionAr}
+                        price={product.contractPrice || '0'}
+                        currency={product.currency || 'SAR'}
+                        sku={product.sku}
+                        imageUrl={product.imageUrl}
+                        hasPrice={product.hasPrice}
+                        onAddToCart={() => {
+                          if (product.hasPrice && product.contractPrice && product.currency && product.ltaId) {
+                            const existingItem = cart.find(item => item.productId === product.id);
+                            if (existingItem) {
+                              setCart(cart.map(item => 
+                                item.productId === product.id 
+                                  ? { ...item, quantity: item.quantity + 1 }
+                                  : item
+                              ));
+                            } else {
+                              setCart([...cart, {
+                                productId: product.id,
+                                productSku: product.sku,
+                                productNameEn: product.nameEn,
+                                productNameAr: product.nameAr,
+                                quantity: 1,
+                                price: product.contractPrice,
+                                currency: product.currency,
+                                ltaId: product.ltaId
+                              }]);
+                            }
+                            setActiveLtaId(product.ltaId);
+                          }
+                        }}
+                        onRequestPrice={() => {
+                          const existingItem = priceRequestList.find(item => item.productId === product.id);
+                          if (!existingItem) {
+                            setPriceRequestList([...priceRequestList, {
+                              productId: product.id,
+                              productSku: product.sku,
+                              productNameEn: product.nameEn,
+                              productNameAr: product.nameAr,
+                              quantity: 1,
+                              price: '0',
+                              currency: 'SAR',
+                              ltaId: ''
+                            }]);
+                          }
+                        }}
+                      />
                     ))}
                   </div>
                 </div>
@@ -1245,7 +1309,58 @@ export default function OrderingPage() {
                           const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
                           return matchesSearch && matchesCategory;
                         }).map((product) => (
-                          <ProductCard key={product.id} product={product} />
+                          <MobileProductCard
+                            key={product.id}
+                            id={product.id}
+                            nameEn={product.nameEn}
+                            nameAr={product.nameAr}
+                            descriptionEn={product.descriptionEn}
+                            descriptionAr={product.descriptionAr}
+                            price={product.contractPrice || '0'}
+                            currency={product.currency || 'SAR'}
+                            sku={product.sku}
+                            imageUrl={product.imageUrl}
+                            hasPrice={product.hasPrice}
+                            onAddToCart={() => {
+                              if (product.hasPrice && product.contractPrice && product.currency && product.ltaId) {
+                                const existingItem = cart.find(item => item.productId === product.id);
+                                if (existingItem) {
+                                  setCart(cart.map(item => 
+                                    item.productId === product.id 
+                                      ? { ...item, quantity: item.quantity + 1 }
+                                      : item
+                                  ));
+                                } else {
+                                  setCart([...cart, {
+                                    productId: product.id,
+                                    productSku: product.sku,
+                                    productNameEn: product.nameEn,
+                                    productNameAr: product.nameAr,
+                                    quantity: 1,
+                                    price: product.contractPrice,
+                                    currency: product.currency,
+                                    ltaId: product.ltaId
+                                  }]);
+                                }
+                                setActiveLtaId(product.ltaId);
+                              }
+                            }}
+                            onRequestPrice={() => {
+                              const existingItem = priceRequestList.find(item => item.productId === product.id);
+                              if (!existingItem) {
+                                setPriceRequestList([...priceRequestList, {
+                                  productId: product.id,
+                                  productSku: product.sku,
+                                  productNameEn: product.nameEn,
+                                  productNameAr: product.nameAr,
+                                  quantity: 1,
+                                  price: '0',
+                                  currency: 'SAR',
+                                  ltaId: ''
+                                }]);
+                              }
+                            }}
+                          />
                         ))}
                       </div>
                     </div>
@@ -1525,17 +1640,44 @@ export default function OrderingPage() {
           </Tabs>
         </main>
 
-        {/* Shopping Cart */}
-        <ShoppingCartComponent
-          items={shoppingCartItems}
-          open={cartOpen}
-          onOpenChange={setCartOpen}
-          onUpdateQuantity={handleUpdateQuantity}
-          onRemoveItem={handleRemoveItem}
-          onClearCart={handleClearCart}
-          onSubmitOrder={handleSubmitOrder}
-          onSaveTemplate={() => setSaveTemplateDialogOpen(true)}
-          currency={cart[0]?.currency || 'USD'}
+        {/* Shopping Cart - Desktop */}
+        <div className="hidden md:block">
+          <ShoppingCartComponent
+            items={shoppingCartItems}
+            open={cartOpen}
+            onOpenChange={setCartOpen}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+            onSubmitOrder={handleSubmitOrder}
+            onSaveTemplate={() => setSaveTemplateDialogOpen(true)}
+            currency={cart[0]?.currency || 'USD'}
+          />
+        </div>
+
+        {/* Mobile Shopping Cart */}
+        <div className="md:hidden">
+          <MobileShoppingCart
+            items={shoppingCartItems}
+            open={cartOpen}
+            onOpenChange={setCartOpen}
+            onUpdateQuantity={handleUpdateQuantity}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+            onSubmitOrder={handleSubmitOrder}
+            onSaveTemplate={() => setSaveTemplateDialogOpen(true)}
+            currency={cart[0]?.currency || 'USD'}
+          />
+        </div>
+
+        {/* Bottom Navigation - Mobile Only */}
+        <BottomNavigation
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          cartItemCount={cartItemCount}
+          notificationCount={0} // TODO: Get from notifications
+          onPriceRequestClick={() => setPriceRequestDialogOpen(true)}
+          onCartOpen={() => setCartOpen(true)}
         />
 
         {/* Save Template Dialog */}
