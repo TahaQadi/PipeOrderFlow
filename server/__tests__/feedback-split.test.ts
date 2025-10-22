@@ -4,6 +4,9 @@ import { db } from '../db';
 import { orderFeedback, issueReports, orders, clients } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 
+// Set test database URL
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/test_db';
+
 describe('Feedback Split Features', () => {
   let testClientId: string;
   let testOrderId: string;

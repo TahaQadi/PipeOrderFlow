@@ -24,6 +24,22 @@ vi.mock('react-i18next', () => ({
   },
 }));
 
+// Mock next-themes
+vi.mock('next-themes', () => ({
+  useTheme: () => ({
+    theme: 'light',
+    setTheme: vi.fn(),
+    resolvedTheme: 'light',
+  }),
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// Mock react-helmet-async
+vi.mock('react-helmet-async', () => ({
+  HelmetProvider: ({ children }: { children: React.ReactNode }) => children,
+  Helmet: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(() => 'en'),
@@ -70,14 +86,12 @@ function AllTheProviders({ children, queryClient }: { children: React.ReactNode;
 
   return (
     <QueryClientProvider client={client}>
-      <ThemeProvider>
-        <LanguageProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster />
-          </TooltipProvider>
-        </LanguageProvider>
-      </ThemeProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster />
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

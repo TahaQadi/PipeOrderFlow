@@ -1,8 +1,8 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { render, createTestQueryClient } from './test-utils';
 import OnboardingPage from '@/pages/OnboardingPage';
 
 // Mock wouter
@@ -11,25 +11,16 @@ vi.mock('wouter', () => ({
 }));
 
 describe('Onboarding E2E Flow', () => {
-  let queryClient: QueryClient;
+  let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    queryClient = createTestQueryClient();
   });
 
   it('should complete full onboarding process', async () => {
     const user = userEvent.setup();
     
-    render(
-      <QueryClientProvider client={queryClient}>
-        <OnboardingPage />
-      </QueryClientProvider>
-    );
+    render(<OnboardingPage />, { queryClient });
 
     // Step 1: User Account
     const emailInput = screen.getByTestId('input-user-email');
