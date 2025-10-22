@@ -1,8 +1,8 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { render, createTestQueryClient } from './test-utils';
 import AdminOrdersPage from '@/pages/AdminOrdersPage';
 import AdminProductsPage from '@/pages/AdminProductsPage';
 
@@ -23,15 +23,10 @@ vi.mock('wouter', () => ({
 }));
 
 describe('Admin Order Management', () => {
-  let queryClient: QueryClient;
+  let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    queryClient = createTestQueryClient();
 
     global.fetch = vi.fn((url) => {
       if (url.includes('/api/admin/orders')) {
@@ -54,11 +49,7 @@ describe('Admin Order Management', () => {
   });
 
   it('should display orders with pagination', async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <AdminOrdersPage />
-      </QueryClientProvider>
-    );
+    render(<AdminOrdersPage />, { queryClient });
 
     await waitFor(() => {
       expect(screen.getByText('ORD-001')).toBeInTheDocument();
@@ -68,11 +59,7 @@ describe('Admin Order Management', () => {
   it('should handle order status updates', async () => {
     const user = userEvent.setup();
     
-    render(
-      <QueryClientProvider client={queryClient}>
-        <AdminOrdersPage />
-      </QueryClientProvider>
-    );
+    render(<AdminOrdersPage />, { queryClient });
 
     await waitFor(() => {
       expect(screen.getByText('ORD-001')).toBeInTheDocument();
@@ -84,15 +71,10 @@ describe('Admin Order Management', () => {
 });
 
 describe('Admin Product Management', () => {
-  let queryClient: QueryClient;
+  let queryClient: ReturnType<typeof createTestQueryClient>;
 
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    queryClient = createTestQueryClient();
 
     global.fetch = vi.fn((url) => {
       if (url.includes('/api/admin/products')) {
@@ -114,11 +96,7 @@ describe('Admin Product Management', () => {
   });
 
   it('should display products with search and filters', async () => {
-    render(
-      <QueryClientProvider client={queryClient}>
-        <AdminProductsPage />
-      </QueryClientProvider>
-    );
+    render(<AdminProductsPage />, { queryClient });
 
     await waitFor(() => {
       expect(screen.getByText('Test Product')).toBeInTheDocument();
@@ -128,11 +106,7 @@ describe('Admin Product Management', () => {
   it('should handle pagination controls', async () => {
     const user = userEvent.setup();
     
-    render(
-      <QueryClientProvider client={queryClient}>
-        <AdminProductsPage />
-      </QueryClientProvider>
-    );
+    render(<AdminProductsPage />, { queryClient });
 
     await waitFor(() => {
       expect(screen.getByText('Test Product')).toBeInTheDocument();
