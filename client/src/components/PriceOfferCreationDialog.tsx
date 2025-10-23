@@ -47,6 +47,7 @@ interface LTA {
   descriptionEn?: string | null;
   descriptionAr?: string | null;
   status: 'active' | 'inactive';
+  currency?: string; // LTA currency
 }
 
 interface Client {
@@ -63,6 +64,7 @@ interface Product {
   sku: string;
   contractPrice?: string;
   currency?: string;
+  quantity?: number; // For price request products
 }
 
 interface PriceOfferCreationDialogProps {
@@ -109,6 +111,11 @@ export default function PriceOfferCreationDialog({
 
   const { data: priceRequest } = useQuery({
     queryKey: ['/api/admin/price-requests', requestId],
+    queryFn: async () => {
+      if (!requestId) return null;
+      const res = await apiRequest('GET', `/api/admin/price-requests/${requestId}`);
+      return res.json();
+    },
     enabled: !!requestId,
   });
 
@@ -118,10 +125,18 @@ export default function PriceOfferCreationDialog({
     queryKey: ['/api/admin/ltas', selectedLtaId, 'products'],
     queryFn: async () => {
       if (!selectedLtaId) return [];
-      const res = await fetch(`/api/admin/ltas/${selectedLtaId}/products`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch LTA products');
+      const res = await apiRequest('GET', `/api/admin/ltas/${selectedLtaId}/products`);
+      return res.json();
+    },
+    enabled: !!selectedLtaId,
+  });
+
+  // Get LTA details to fetch currency
+  const { data: selectedLta } = useQuery<LTA>({
+    queryKey: ['/api/admin/ltas', selectedLtaId],
+    queryFn: async () => {
+      if (!selectedLtaId) return null;
+      const res = await apiRequest('GET', `/api/admin/ltas/${selectedLtaId}`);
       return res.json();
     },
     enabled: !!selectedLtaId,
@@ -132,10 +147,7 @@ export default function PriceOfferCreationDialog({
     queryKey: ['/api/admin/ltas', selectedLtaId, 'clients'],
     queryFn: async () => {
       if (!selectedLtaId) return [];
-      const res = await fetch(`/api/admin/ltas/${selectedLtaId}/clients`, {
-        credentials: 'include',
-      });
-      if (!res.ok) throw new Error('Failed to fetch LTA clients');
+      const res = await apiRequest('GET', `/api/admin/ltas/${selectedLtaId}/clients`);
       return res.json();
     },
     enabled: !!selectedLtaId,
@@ -196,6 +208,18 @@ export default function PriceOfferCreationDialog({
     }
   }, [selectedLtaId, ltaProducts, allProducts]);
 
+  // Update currency for all items when LTA changes
+  useEffect(() => {
+    if (selectedLta?.currency) {
+      const currentItems = form.getValues('items');
+      const updatedItems = currentItems.map(item => ({
+        ...item,
+        currency: selectedLta.currency || 'USD'
+      }));
+      form.setValue('items', updatedItems);
+    }
+  }, [selectedLta?.currency, form]);
+
   // Auto-fill from price request if provided
   useEffect(() => {
     if (priceRequest && open) {
@@ -215,13 +239,13 @@ export default function PriceOfferCreationDialog({
         sku: product.sku,
         quantity: product.quantity || 1,
         unitPrice: product.contractPrice || '0',
-        currency: 'USD',
+        currency: selectedLta?.currency || 'USD', // Use LTA currency
       }));
       
       form.setValue('items', items);
       setSelectedProducts(products);
     }
-  }, [priceRequest, open, form]);
+  }, [priceRequest, open, form, selectedLta]);
 
   const handleAddProduct = (product: Product) => {
     const currentItems = form.getValues('items');
@@ -243,7 +267,7 @@ export default function PriceOfferCreationDialog({
       sku: product.sku,
       quantity: 1,
       unitPrice: product.contractPrice || '0',
-      currency: product.currency || 'USD',
+      currency: selectedLta?.currency || product.currency || 'USD', // Use LTA currency first
     };
 
     const updatedItems = [...currentItems, newItem];
@@ -273,6 +297,9 @@ export default function PriceOfferCreationDialog({
     );
     form.setValue('items', updatedItems);
   };
+
+  // Get the current currency (from LTA or default)
+  const currentCurrency = selectedLta?.currency || 'USD';
 
   const onSubmit = (data: PriceOfferFormValues) => {
     createPriceOfferMutation.mutate(data);
@@ -477,7 +504,7 @@ export default function PriceOfferCreationDialog({
                                     onChange={(e) => handlePriceChange(item.productId, e.target.value)}
                                     className="w-24"
                                   />
-                                  <span className="text-sm text-muted-foreground">{item.currency}</span>
+                                  <span className="text-sm text-muted-foreground">{currentCurrency}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="font-medium">
