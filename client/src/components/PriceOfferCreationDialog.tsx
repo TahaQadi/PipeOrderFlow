@@ -64,7 +64,6 @@ interface Product {
   sku: string;
   contractPrice?: string;
   currency?: string;
-  quantity?: number; // For price request products
 }
 
 interface PriceOfferCreationDialogProps {
@@ -237,7 +236,7 @@ export default function PriceOfferCreationDialog({
         nameEn: product.nameEn,
         nameAr: product.nameAr,
         sku: product.sku,
-        quantity: product.quantity || 1,
+        quantity: 1, // Default to 1 since price requests don't have quantities
         unitPrice: product.contractPrice || '0',
         currency: 'USD', // Will be updated when LTA loads
       }));
