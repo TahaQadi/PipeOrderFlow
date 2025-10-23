@@ -239,13 +239,25 @@ export default function PriceOfferCreationDialog({
         sku: product.sku,
         quantity: product.quantity || 1,
         unitPrice: product.contractPrice || '0',
-        currency: selectedLta?.currency || 'USD', // Use LTA currency
+        currency: 'USD', // Will be updated when LTA loads
       }));
       
       form.setValue('items', items);
       setSelectedProducts(products);
     }
-  }, [priceRequest, open, form, selectedLta]);
+  }, [priceRequest, open, form]);
+
+  // Update currency when LTA is loaded
+  useEffect(() => {
+    if (selectedLta?.currency && priceRequest && open) {
+      const currentItems = form.getValues('items');
+      const updatedItems = currentItems.map(item => ({
+        ...item,
+        currency: selectedLta.currency || 'USD'
+      }));
+      form.setValue('items', updatedItems);
+    }
+  }, [selectedLta?.currency, priceRequest, open, form]);
 
   const handleAddProduct = (product: Product) => {
     const currentItems = form.getValues('items');
@@ -331,6 +343,11 @@ export default function PriceOfferCreationDialog({
                     <FormLabel className="flex items-center gap-2">
                       <Package className="h-4 w-4" />
                       {language === 'ar' ? 'الاتفاقية طويلة الأجل' : 'Long Term Agreement'}
+                      {selectedLta?.currency && (
+                        <Badge variant="outline" className="text-xs">
+                          {selectedLta.currency}
+                        </Badge>
+                      )}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>

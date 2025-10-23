@@ -781,6 +781,7 @@ export default function AdminPriceManagementPage() {
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['/api/admin/price-offers'] });
           queryClient.invalidateQueries({ queryKey: ['/api/admin/price-requests'] });
+          setSelectedRequestForOffer(null);
         }}
       />
 
