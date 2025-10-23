@@ -322,24 +322,24 @@ export default function PriceOfferCreationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <FileText className="h-5 w-5" />
             {language === 'ar' ? 'إنشاء عرض سعر جديد' : 'Create New Price Offer'}
           </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* LTA Selection */}
               <FormField
                 control={form.control}
                 name="ltaId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-sm">
                       <Package className="h-4 w-4" />
                       {language === 'ar' ? 'الاتفاقية طويلة الأجل' : 'Long Term Agreement'}
                       {selectedLta?.currency && (
@@ -373,7 +373,7 @@ export default function PriceOfferCreationDialog({
                 name="clientId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-sm">
                       <Users className="h-4 w-4" />
                       {language === 'ar' ? 'العميل' : 'Client'}
                     </FormLabel>
@@ -403,7 +403,7 @@ export default function PriceOfferCreationDialog({
               name="validUntil"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="flex items-center gap-2">
+                  <FormLabel className="flex items-center gap-2 text-sm">
                     <CalendarIcon className="h-4 w-4" />
                     {language === 'ar' ? 'تاريخ انتهاء الصلاحية' : 'Expiration Date'}
                   </FormLabel>
@@ -413,7 +413,7 @@ export default function PriceOfferCreationDialog({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full pl-3 text-left font-normal",
+                            "w-full pl-3 text-left font-normal h-9",
                             !field.value && "text-muted-foreground"
                           )}
                         >
@@ -442,16 +442,16 @@ export default function PriceOfferCreationDialog({
 
             {/* Product Selection */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Package className="h-5 w-5" />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h3 className="text-base font-semibold flex items-center gap-2">
+                  <Package className="h-4 w-4" />
                   {language === 'ar' ? 'المنتجات' : 'Products'}
                 </h3>
                 <Select onValueChange={(productId) => {
                   const product = availableProducts.find(p => p.id === productId);
                   if (product) handleAddProduct(product);
                 }}>
-                  <SelectTrigger className="w-64">
+                  <SelectTrigger className="w-full sm:w-64">
                     <SelectValue placeholder={language === 'ar' ? 'إضافة منتج' : 'Add Product'} />
                   </SelectTrigger>
                   <SelectContent>
@@ -468,82 +468,158 @@ export default function PriceOfferCreationDialog({
 
               {currentItems.length > 0 && (
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="pb-3">
                     <CardTitle className="text-base">
                       {language === 'ar' ? 'منتجات العرض' : 'Offer Items'}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>{language === 'ar' ? 'المنتج' : 'Product'}</TableHead>
-                          <TableHead>{language === 'ar' ? 'الكمية' : 'Quantity'}</TableHead>
-                          <TableHead>{language === 'ar' ? 'سعر الوحدة' : 'Unit Price'}</TableHead>
-                          <TableHead>{language === 'ar' ? 'المجموع' : 'Total'}</TableHead>
-                          <TableHead className="w-12"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {currentItems.map((item) => {
-                          const product = selectedProducts.find(p => p.id === item.productId);
-                          const total = (parseFloat(item.unitPrice) || 0) * item.quantity;
-                          
-                          return (
-                            <TableRow key={item.productId}>
-                              <TableCell>
-                                <div>
-                                  <div className="font-medium">
-                                    {language === 'ar' ? item.nameAr : item.nameEn}
+                  <CardContent className="p-0">
+                    {/* Desktop Table View */}
+                    <div className="hidden sm:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-sm">{language === 'ar' ? 'المنتج' : 'Product'}</TableHead>
+                            <TableHead className="text-sm w-20">{language === 'ar' ? 'الكمية' : 'Qty'}</TableHead>
+                            <TableHead className="text-sm w-32">{language === 'ar' ? 'سعر الوحدة' : 'Unit Price'}</TableHead>
+                            <TableHead className="text-sm w-24">{language === 'ar' ? 'المجموع' : 'Total'}</TableHead>
+                            <TableHead className="w-12"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {currentItems.map((item) => {
+                            const product = selectedProducts.find(p => p.id === item.productId);
+                            const total = (parseFloat(item.unitPrice) || 0) * item.quantity;
+                            
+                            return (
+                              <TableRow key={item.productId}>
+                                <TableCell>
+                                  <div>
+                                    <div className="font-medium text-sm">
+                                      {language === 'ar' ? item.nameAr : item.nameEn}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      SKU: {item.sku}
+                                    </div>
                                   </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    SKU: {item.sku}
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    value={item.quantity}
+                                    onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value) || 1)}
+                                    className="w-16 h-8 text-sm"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    <DollarSign className="h-3 w-3" />
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={item.unitPrice}
+                                      onChange={(e) => handlePriceChange(item.productId, e.target.value)}
+                                      className="w-20 h-8 text-sm"
+                                    />
+                                    <span className="text-xs text-muted-foreground">{currentCurrency}</span>
                                   </div>
+                                </TableCell>
+                                <TableCell className="font-medium text-sm">
+                                  ${total.toFixed(2)}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveProduct(item.productId)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="sm:hidden space-y-3 p-4">
+                      {currentItems.map((item) => {
+                        const product = selectedProducts.find(p => p.id === item.productId);
+                        const total = (parseFloat(item.unitPrice) || 0) * item.quantity;
+                        
+                        return (
+                          <div key={item.productId} className="border rounded-lg p-3 space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-sm">
+                                  {language === 'ar' ? item.nameAr : item.nameEn}
                                 </div>
-                              </TableCell>
-                              <TableCell>
+                                <div className="text-xs text-muted-foreground">
+                                  SKU: {item.sku}
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveProduct(item.productId)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs text-muted-foreground">
+                                  {language === 'ar' ? 'الكمية' : 'Quantity'}
+                                </Label>
                                 <Input
                                   type="number"
                                   min="1"
                                   value={item.quantity}
                                   onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value) || 1)}
-                                  className="w-20"
+                                  className="h-8 text-sm"
                                 />
-                              </TableCell>
-                              <TableCell>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">
+                                  {language === 'ar' ? 'سعر الوحدة' : 'Unit Price'}
+                                </Label>
                                 <div className="flex items-center gap-1">
-                                  <DollarSign className="h-4 w-4" />
+                                  <DollarSign className="h-3 w-3" />
                                   <Input
                                     type="number"
                                     step="0.01"
                                     value={item.unitPrice}
                                     onChange={(e) => handlePriceChange(item.productId, e.target.value)}
-                                    className="w-24"
+                                    className="h-8 text-sm"
                                   />
-                                  <span className="text-sm text-muted-foreground">{currentCurrency}</span>
+                                  <span className="text-xs text-muted-foreground">{currentCurrency}</span>
                                 </div>
-                              </TableCell>
-                              <TableCell className="font-medium">
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between items-center pt-2 border-t">
+                              <span className="text-sm font-medium">
+                                {language === 'ar' ? 'المجموع' : 'Total'}
+                              </span>
+                              <span className="font-semibold text-sm">
                                 ${total.toFixed(2)}
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleRemoveProduct(item.productId)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                     
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="flex justify-between items-center text-lg font-semibold">
+                    <div className="p-4 border-t">
+                      <div className="flex justify-between items-center text-base font-semibold">
                         <span>{language === 'ar' ? 'المجموع الكلي' : 'Total Amount'}:</span>
                         <span>${total.toFixed(2)}</span>
                       </div>
@@ -559,12 +635,13 @@ export default function PriceOfferCreationDialog({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{language === 'ar' ? 'ملاحظات' : 'Notes'}</FormLabel>
+                  <FormLabel className="text-sm">{language === 'ar' ? 'ملاحظات' : 'Notes'}</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       placeholder={language === 'ar' ? 'أدخل أي ملاحظات إضافية...' : 'Enter any additional notes...'}
                       rows={3}
+                      className="text-sm"
                     />
                   </FormControl>
                   <FormMessage />
@@ -572,17 +649,19 @@ export default function PriceOfferCreationDialog({
               )}
             />
 
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="w-full sm:w-auto"
               >
                 {language === 'ar' ? 'إلغاء' : 'Cancel'}
               </Button>
               <Button
                 type="submit"
                 disabled={createPriceOfferMutation.isPending || currentItems.length === 0}
+                className="w-full sm:w-auto"
               >
                 {createPriceOfferMutation.isPending
                   ? (language === 'ar' ? 'جاري الإنشاء...' : 'Creating...')
