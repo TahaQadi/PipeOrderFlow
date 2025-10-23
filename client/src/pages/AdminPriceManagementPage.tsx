@@ -13,13 +13,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Check, Clock, Package, Download, Archive, FileText, Eye, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Check, Clock, Package, Download, Archive, FileText, Eye, CheckCircle, XCircle, AlertCircle, Plus } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDistanceToNow } from 'date-fns';
 import { ar, enUS } from 'date-fns/locale';
 import { safeJsonParse } from '@/lib/safeJson';
+import PriceOfferCreationDialog from '@/components/PriceOfferCreationDialog';
 
 interface Notification {
   id: string;
@@ -116,6 +117,8 @@ export default function AdminPriceManagementPage() {
   const [pdfValidityDays, setPdfValidityDays] = useState('30');
   const [pdfNotes, setPdfNotes] = useState('');
   const [linkedRequestId, setLinkedRequestId] = useState<string | null>(null);
+  const [createOfferDialogOpen, setCreateOfferDialogOpen] = useState(false);
+  const [selectedRequestForOffer, setSelectedRequestForOffer] = useState<PriceRequest | null>(null);
 
   const { data: notifications = [], isLoading: isLoadingRequests } = useQuery<Notification[]>({
     queryKey: ['/api/client/notifications'],
@@ -391,21 +394,13 @@ export default function AdminPriceManagementPage() {
   };
 
   const handleCreateOffer = (request: PriceRequest) => {
-    // Set up the form data from the request
-    setLinkedRequestId(request.id);
-    setSelectedLtaId(request.ltaId || '');
-    setPdfLtaId(request.ltaId || '');
-    setPdfNotes(request.notes || '');
-    
-    // Navigate to price offers creation page
-    setLocation(`/admin/price-offers/create?requestId=${request.id}`);
-    
-    toast({
-      title: language === 'ar' ? 'إنشاء عرض من الطلب' : 'Creating Offer from Request',
-      description: language === 'ar' 
-        ? `سيتم ربط العرض بالطلب ${request.requestNumber}` 
-        : `Offer will be linked to request ${request.requestNumber}`,
-    });
+    setSelectedRequestForOffer(request);
+    setCreateOfferDialogOpen(true);
+  };
+
+  const handleCreateOfferFromScratch = () => {
+    setSelectedRequestForOffer(null);
+    setCreateOfferDialogOpen(true);
   };
 
   return (
@@ -433,6 +428,13 @@ export default function AdminPriceManagementPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={handleCreateOfferFromScratch}
+              className="bg-primary hover:bg-primary/90 dark:bg-[#d4af37] dark:hover:bg-[#d4af37]/90 text-primary-foreground dark:text-black"
+            >
+              <Plus className="h-4 w-4 me-2" />
+              {language === 'ar' ? 'إنشاء عرض سعر' : 'Create Price Offer'}
+            </Button>
             <LanguageToggle />
             <ThemeToggle />
           </div>
@@ -770,6 +772,17 @@ export default function AdminPriceManagementPage() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Price Offer Creation Dialog */}
+      <PriceOfferCreationDialog
+        open={createOfferDialogOpen}
+        onOpenChange={setCreateOfferDialogOpen}
+        requestId={selectedRequestForOffer?.id}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/price-offers'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/admin/price-requests'] });
+        }}
+      />
 
       {/* Assign Price Dialog */}
       <Dialog open={priceDialogOpen} onOpenChange={setPriceDialogOpen}>
