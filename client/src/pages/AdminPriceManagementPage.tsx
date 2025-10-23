@@ -155,16 +155,20 @@ export default function AdminPriceManagementPage() {
     if (requestId && priceRequests.length > 0) {
       const request = priceRequests.find(r => r.id === requestId);
       if (request) {
-        setLinkedRequestId(requestId);
-        setSelectedLtaId(request.ltaId || '');
-        setPdfLtaId(request.ltaId || '');
-        setPdfNotes(request.notes || '');
+        // Set the selected request for the dialog
+        setSelectedRequestForOffer(request);
+        setCreateOfferDialogOpen(true);
+        
+        // Clear the URL parameter
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('requestId');
+        window.history.replaceState({}, '', newUrl.toString());
         
         toast({
-          title: language === 'ar' ? 'تم التحميل من الطلب' : 'Loaded from Request',
+          title: language === 'ar' ? 'تم تحميل طلب السعر' : 'Price Request Loaded',
           description: language === 'ar' 
-            ? `تم تحميل البيانات من الطلب ${request.requestNumber}` 
-            : `Data loaded from request ${request.requestNumber}`,
+            ? `تم تحميل الطلب ${request.requestNumber} لإنشاء عرض سعر` 
+            : `Loaded request ${request.requestNumber} to create price offer`,
         });
       }
     }
